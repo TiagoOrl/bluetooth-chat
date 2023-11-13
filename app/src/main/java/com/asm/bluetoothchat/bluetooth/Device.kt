@@ -2,8 +2,10 @@ package com.asm.bluetoothchat.bluetooth
 
 import java.util.UUID
 
-data class Device(
-    private val uuid: UUID,
-    private val name: String,
-    private val macAddress: String
-)
+class Device(
+    val uuid: UUID,
+    val name: String,
+    val macAddress: String
+) {
+    var isConnected = false
+}
