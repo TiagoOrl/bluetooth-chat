@@ -64,7 +64,7 @@ class MainController(
     }
 
     @SuppressLint("MissingPermission")
-    private fun getPairedDevices() {
+    fun getPairedDevices() {
         if (!hasLocationPermission || !hasConnectPermission) {
             requestNeededPermissions()
             return
@@ -76,6 +76,7 @@ class MainController(
         pairedDevices.forEach {
             devices.add(Device(UUID.randomUUID(), it.name, it.address))
         }
+        println(devices)
     }
 
     /**

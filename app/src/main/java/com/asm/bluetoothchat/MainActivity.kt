@@ -5,15 +5,20 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.asm.bluetoothchat.controller.MainController
+import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
     private lateinit var mainController: MainController
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         mainController = MainController(this, PermissionsManager())
+        initViews()
     }
 
     override fun onRequestPermissionsResult(
@@ -45,6 +50,12 @@ class MainActivity : AppCompatActivity() {
                 mainController.isBtActivated = true;
                 mainController.initBluetooth()
             }
+        }
+    }
+
+    private fun initViews() {
+        binding.btnGetPaired.setOnClickListener {
+            mainController.getPairedDevices()
         }
     }
 
