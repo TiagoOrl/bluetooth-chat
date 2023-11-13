@@ -24,6 +24,64 @@ class MainController(
     var isBtActivated = false;
 
     init {
+        requestNeededPermissions()
+        initBluetooth()
+    }
+
+    /**
+     * Initializes the bluetooth adapter, checks if adapter is enabled
+     */
+    fun initBluetooth() {
+        if (!hasLocationPermission || !hasConnectPermission) {
+            requestNeededPermissions()
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val bluetoothManager: BluetoothManager = activity.getSystemService(BluetoothManager::class.java)
+            bluetoothAdapter = bluetoothManager.adapter
+        } else
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+
+        checkBTEnabled()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkBTEnabled() {
+        if (!hasLocationPermission || !hasConnectPermission) {
+            requestNeededPermissions()
+            return
+        }
+
+        if (bluetoothAdapter == null)
+            throw RuntimeException("bluetoothadapter is null")
+
+        if (!bluetoothAdapter!!.isEnabled) {
+            val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            activity.startActivityForResult(intent, Constants.REQ_ENABLE_BLUETOOTH)
+        } else
+            isBtActivated = true;
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getPairedDevices() {
+        if (!hasLocationPermission || !hasConnectPermission) {
+            requestNeededPermissions()
+            return
+        }
+        if (bluetoothAdapter == null)
+            throw RuntimeException("bluetoothadapter is null")
+
+        val pairedDevices = bluetoothAdapter!!.bondedDevices
+        pairedDevices.forEach {
+            devices.add(Device(UUID.randomUUID(), it.name, it.address))
+        }
+    }
+
+    /**
+     * checks if has granted locations and bluetooth connect permission, request if its not granted
+     */
+    private fun requestNeededPermissions() {
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             !permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_CONNECT)
@@ -53,48 +111,6 @@ class MainController(
             )
         } else
             hasLocationPermission = true;
-
-        initBluetoothAdapter()
-    }
-
-    /**
-     * Initializes the bluetooth adapter, checks if adapter is enabled
-     */
-    fun initBluetoothAdapter() {
-        if (hasLocationPermission && hasConnectPermission) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val bluetoothManager: BluetoothManager = activity.getSystemService(BluetoothManager::class.java)
-                bluetoothAdapter = bluetoothManager.adapter
-            } else
-                bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-
-            checkBTEnabled()
-        }
-    }
-
-@SuppressLint("MissingPermission")
-    private fun checkBTEnabled() {
-        if (!bluetoothAdapter!!.isEnabled) {
-            val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            activity.startActivityForResult(intent, Constants.REQ_ENABLE_BLUETOOTH)
-        } else
-            isBtActivated = true;
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getPairedDevices() {
-        if (bluetoothAdapter == null) return
-
-        if(
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            !permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_CONNECT)
-        )
-            throw RuntimeException("BLUETOOTH_CONNECT permission missing")
-
-        val pairedDevices = bluetoothAdapter!!.bondedDevices
-        pairedDevices.forEach {
-            devices.add(Device(UUID.randomUUID(), it.name, it.address))
-        }
     }
 
 }

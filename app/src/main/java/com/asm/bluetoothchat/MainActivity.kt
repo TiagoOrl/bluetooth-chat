@@ -26,8 +26,8 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == Constants.REQ_LOCATION_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 println("Location permission for location granted.")
-                mainController.initBluetoothAdapter()
                 mainController.hasLocationPermission = true;
+                mainController.initBluetooth()
             }
         }
 
@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 println("Location permission for bluetooth connect granted.")
                 mainController.hasConnectPermission = true;
+                mainController.initBluetooth()
             }
         }
 
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 println("Bluetooth enabled event")
                 mainController.isBtActivated = true;
+                mainController.initBluetooth()
             }
         }
     }
