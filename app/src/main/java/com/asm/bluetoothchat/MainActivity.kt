@@ -7,10 +7,14 @@ import androidx.appcompat.app.AppCompatActivity
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
+import com.asm.bluetoothchat.ui.fragment.PairedDevicesFragment
+import com.asm.bluetoothchat.utils.FragmentUtils
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var mainController: MainController
+    private lateinit var pairedDevicesFragment: PairedDevicesFragment
+
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         mainController = MainController(this, PermissionsManager())
+        pairedDevicesFragment = PairedDevicesFragment(mainController)
         initViews()
     }
 
@@ -55,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViews() {
         binding.btnGetPaired.setOnClickListener {
-            mainController.getPairedDevices()
+            FragmentUtils.show(supportFragmentManager, pairedDevicesFragment)
         }
     }
 

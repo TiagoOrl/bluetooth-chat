@@ -1,4 +1,4 @@
-package com.asm.bluetoothchat.ui
+package com.asm.bluetoothchat.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -24,7 +24,10 @@ class DevicesAdapter : RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>() {
         holder.bind(devices[position])
     }
 
-    fun updateList(list: ArrayList<Device>) {
+    fun updateList(list: ArrayList<Device>?) {
+        if (list == null)
+            return
+
         devices = list
         notifyDataSetChanged()
     }

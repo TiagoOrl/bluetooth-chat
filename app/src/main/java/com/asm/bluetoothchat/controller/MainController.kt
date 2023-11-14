@@ -64,10 +64,12 @@ class MainController(
     }
 
     @SuppressLint("MissingPermission")
-    fun getPairedDevices() {
+    fun getPairedDevices() : ArrayList<Device>? {
+        if (devices.size > 0)
+            return devices
         if (!hasLocationPermission || !hasConnectPermission) {
             requestNeededPermissions()
-            return
+            return null
         }
         if (bluetoothAdapter == null)
             throw RuntimeException("bluetoothadapter is null")
@@ -76,7 +78,8 @@ class MainController(
         pairedDevices.forEach {
             devices.add(Device(UUID.randomUUID(), it.name, it.address))
         }
-        println(devices)
+
+        return devices
     }
 
     /**
