@@ -1,5 +1,6 @@
 package com.asm.bluetoothchat.ui.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -36,9 +37,10 @@ class DevicesAdapter : RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>() {
     inner class DeviceViewHolder(
         private val binding: CardDeviceItemBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+        @SuppressLint("MissingPermission")
         fun bind(device: Device) {
-            binding.tvDeviceName.text = device.name
-            binding.tvDeviceMac.text = device.macAddress
+            binding.tvDeviceName.text = device.bluetoothDevice.name
+            binding.tvDeviceMac.text = device.bluetoothDevice.address
             binding.ibDeviceConnect
 
             if (device.isConnected)

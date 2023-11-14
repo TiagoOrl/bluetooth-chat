@@ -76,7 +76,7 @@ class MainController(
 
         val pairedDevices = bluetoothAdapter!!.bondedDevices
         pairedDevices.forEach {
-            devices.add(Device(UUID.randomUUID(), it.name, it.address))
+            devices.add(Device(it))
         }
 
         return devices

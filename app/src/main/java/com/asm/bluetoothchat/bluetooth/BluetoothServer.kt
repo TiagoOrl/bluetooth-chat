@@ -42,7 +42,7 @@ class BluetoothServer(
     }
 
     private fun manageConnectedSocket(socket: BluetoothSocket) {
-
+        
     }
 
     fun cancel() {
