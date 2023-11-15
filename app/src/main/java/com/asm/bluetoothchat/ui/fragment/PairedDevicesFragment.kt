@@ -7,15 +7,17 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.asm.bluetoothchat.R
+import com.asm.bluetoothchat.bluetooth.Device
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.DevicesPairedFragmentBinding
 import com.asm.bluetoothchat.ui.adapter.DevicesAdapter
 
 class PairedDevicesFragment(
-    private val mainController: MainController
+    private val mainController: MainController,
+    private val onConnect: (device: Device) -> Unit
 ) : Fragment(R.layout.devices_paired_fragment) {
     private lateinit var binding: DevicesPairedFragmentBinding
-    private val adapter by lazy { DevicesAdapter() }
+    private val adapter by lazy { DevicesAdapter(onConnect) }
 
     override fun onCreateView(
         inflater: LayoutInflater,

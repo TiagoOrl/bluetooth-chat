@@ -4,17 +4,24 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
+import android.os.Handler
+import android.os.Looper
 import java.io.IOException
+import java.lang.RuntimeException
 import java.util.UUID
 
 @SuppressLint("MissingPermission")
 class BluetoothServer(
-    bluetoothAdapter: BluetoothAdapter,
+    bluetoothAdapter: BluetoothAdapter?,
     name: String,
-    uuid: UUID
+    uuid: UUID,
+    private val onGetSocket: (socket: BluetoothSocket) -> Unit
 ) : Thread() {
     private var serverSocket: BluetoothServerSocket
     init {
+        if (bluetoothAdapter == null)
+            throw RuntimeException("BluetoothServer: bluetoothAdapter is null")
+
         try {
             serverSocket = bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(name, uuid)
         } catch (e: IOException) {
@@ -34,15 +41,11 @@ class BluetoothServer(
                 throw e
             }
             socket.also {
-                manageConnectedSocket(socket)
+                onGetSocket(socket)
                 shouldLoop = false
                 serverSocket.close()
             }
         }
-    }
-
-    private fun manageConnectedSocket(socket: BluetoothSocket) {
-
     }
 
     fun cancel() {
