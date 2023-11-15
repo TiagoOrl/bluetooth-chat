@@ -7,13 +7,12 @@ import androidx.appcompat.app.AppCompatActivity
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
-import com.asm.bluetoothchat.ui.fragment.PairedDevicesFragment
-import com.asm.bluetoothchat.utils.FragmentUtils
+import java.nio.charset.Charset
+import java.text.MessageFormat
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var mainController: MainController
-    private lateinit var pairedDevicesFragment: PairedDevicesFragment
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,8 +20,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mainController = MainController(this, PermissionsManager())
-        pairedDevicesFragment = PairedDevicesFragment(mainController)
+        mainController = MainController(this, PermissionsManager()) {
+            size, buffer ->
+                val msg = String(buffer,0, size, Charset.defaultCharset())
+                binding.tvChatMain.text = MessageFormat.format(
+                    "{0} \n{1}",
+                    binding.tvChatMain.text,
+                    msg
+                )
+        }
+
         initViews()
     }
 
@@ -56,11 +63,26 @@ class MainActivity : AppCompatActivity() {
                 mainController.initBluetooth()
             }
         }
+
+        if (requestCode == Constants.REQ_BLUETOOTH_SCAN) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                println("Bluetooth SCAN enabled event")
+                mainController.hasScanPermission = true
+                mainController.initBluetooth()
+            }
+
+        }
     }
 
     private fun initViews() {
         binding.btnGetPaired.setOnClickListener {
-            FragmentUtils.show(supportFragmentManager, pairedDevicesFragment)
+            mainController.showPairedDevices()
+        }
+
+        binding.btnSendMsg.setOnClickListener {
+            if (binding.etChat.text!!.isNotEmpty()) {
+                mainController.sendMessage(binding.etChat.text.toString())
+            }
         }
     }
 
