@@ -51,8 +51,10 @@ class DevicesAdapter(
                 binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_outline_blank_24)
 
             binding.ibDeviceConnect.setOnClickListener {
-                onConnect(device)
-                binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
+                if (!device.isConnected) {
+                    onConnect(device)
+                    binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
+                }
             }
         }
     }
