@@ -2,9 +2,9 @@ package com.asm.bluetoothchat.controller
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.Build
 import android.os.Handler
@@ -13,6 +13,7 @@ import androidx.fragment.app.FragmentActivity
 import com.asm.bluetoothchat.Constants
 import com.asm.bluetoothchat.bluetooth.BluetoothClient
 import com.asm.bluetoothchat.bluetooth.BluetoothServer
+import com.asm.bluetoothchat.bluetooth.Connection
 import com.asm.bluetoothchat.bluetooth.Device
 import com.asm.bluetoothchat.permission.PermissionsManager
 import com.asm.bluetoothchat.ui.fragment.PairedDevicesFragment
@@ -23,12 +24,13 @@ import java.util.UUID
 class MainController(
     private val activity: FragmentActivity,
     private val permissionsManager: PermissionsManager,
-    private val receiveCallback: (size: Int, buffer: ByteArray) -> Unit
+    private val onReceiveMsg: (size: Int, buffer: ByteArray) -> Unit
 ) {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private val devices = arrayListOf<Device>()
     private lateinit var bluetoothServer: BluetoothServer
     private lateinit var bluetoothClient: BluetoothClient
+    private var connection: Connection? = null
     private var pairedDevicesFragment: PairedDevicesFragment
     var hasConnectPermission = false;
     var hasLocationPermission = false;
@@ -37,8 +39,11 @@ class MainController(
 
     init {
         pairedDevicesFragment = PairedDevicesFragment(this) {
-            bluetoothClient.createClientConnection(it.bluetoothDevice)
-            bluetoothClient.start()
+            if (haveRequiredPermissions()) {
+                bluetoothClient.createClientConnection(it.bluetoothDevice)
+                bluetoothClient.start()
+            } else
+                requestNeededPermissions()
         }
         requestNeededPermissions()
         initBluetooth()
@@ -48,7 +53,7 @@ class MainController(
      * Initializes the bluetooth adapter, checks if adapter is enabled
      */
     fun initBluetooth() {
-        if (!hasLocationPermission || !hasConnectPermission || !hasScanPermission) {
+        if (!haveRequiredPermissions()) {
             requestNeededPermissions()
             return
         }
@@ -64,7 +69,7 @@ class MainController(
 
     @SuppressLint("MissingPermission")
     private fun checkBTEnabled() {
-        if (!hasLocationPermission || !hasConnectPermission || !hasScanPermission) {
+        if (!haveRequiredPermissions()) {
             requestNeededPermissions()
             return
         }
@@ -77,8 +82,14 @@ class MainController(
             activity.startActivityForResult(intent, Constants.REQ_ENABLE_BLUETOOTH)
         } else {
             isBtActivated = true
-            initBluetoothServer(receiveCallback)
-            initBluetoothClient(receiveCallback)
+            initBluetoothServer {
+                connection = Connection(Handler(Looper.getMainLooper()), it, onReceiveMsg)
+                connection!!.start()
+            }
+            initBluetoothClient {
+                connection = Connection(Handler(Looper.getMainLooper()), it, onReceiveMsg)
+                connection!!.start()
+            }
         }
     }
 
@@ -86,7 +97,7 @@ class MainController(
     fun getPairedDevices() : ArrayList<Device>? {
         if (devices.size > 0)
             return devices
-        if (!hasLocationPermission || !hasConnectPermission || !hasScanPermission) {
+        if (!haveRequiredPermissions()) {
             requestNeededPermissions()
             return null
         }
@@ -101,22 +112,20 @@ class MainController(
         return devices
     }
 
-    private fun initBluetoothServer(receiveCallback: (size: Int, buffer: ByteArray) -> Unit) {
+    private fun initBluetoothServer(onGetSocket: (socket: BluetoothSocket) -> Unit) {
         bluetoothServer = BluetoothServer(
-            Handler(Looper.getMainLooper()),
             bluetoothAdapter,
             Constants.APP_NAME,
             UUID.fromString(Constants.APP_UUID),
-            receiveCallback
+            onGetSocket
         )
         bluetoothServer.start()
     }
 
-    private fun initBluetoothClient(receiveCallback: (size: Int, buffer: ByteArray) -> Unit) {
+    private fun initBluetoothClient(onGetSocket: (socket: BluetoothSocket) -> Unit) {
         bluetoothClient = BluetoothClient(
-            Handler(Looper.getMainLooper()),
             bluetoothAdapter,
-            receiveCallback
+            onGetSocket
         )
     }
 
@@ -175,7 +184,14 @@ class MainController(
     }
 
     fun sendMessage(msg: String) {
-        bluetoothClient.sendMsg(msg)
+        if (connection != null)
+            connection!!.write(msg.encodeToByteArray())
+        else
+            println("MainController: could not send message, connection is null")
+    }
+
+    private fun haveRequiredPermissions() : Boolean {
+       return (hasLocationPermission && hasConnectPermission && hasScanPermission)
     }
 
 }

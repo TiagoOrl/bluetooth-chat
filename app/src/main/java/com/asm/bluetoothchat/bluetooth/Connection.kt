@@ -1,7 +1,6 @@
 package com.asm.bluetoothchat.bluetooth
 
 import android.bluetooth.BluetoothSocket
-import android.os.Bundle
 import android.os.Handler
 import java.io.IOException
 import java.io.InputStream
@@ -11,7 +10,7 @@ import java.io.OutputStream
 class Connection(
     private val handler: Handler,
     private val socket: BluetoothSocket,
-    private val receiveCallback: (size: Int, buffer: ByteArray) -> Unit
+    private val onReceiveMsg: (size: Int, buffer: ByteArray) -> Unit
 ) : Thread() {
     private val inStream: InputStream = socket.inputStream
     private val outStream: OutputStream = socket.outputStream
@@ -30,7 +29,7 @@ class Connection(
             }
 
             handler.post {
-                receiveCallback(numBytes, buffer)
+                onReceiveMsg(numBytes, buffer)
             }
         }
     }

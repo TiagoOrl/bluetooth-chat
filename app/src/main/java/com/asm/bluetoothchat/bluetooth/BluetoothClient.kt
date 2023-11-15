@@ -12,12 +12,10 @@ import java.util.UUID
 
 @SuppressLint("MissingPermission")
 class BluetoothClient(
-    private val handler: Handler,
     private val bluetoothAdapter: BluetoothAdapter?,
-    private val receiveCallback: (size: Int, buffer: ByteArray) -> Unit
+    private val onGetSocket: (socket: BluetoothSocket) -> Unit
 ) : Thread() {
     private lateinit var socket: BluetoothSocket
-    private var connection: Connection? = null
 
     fun createClientConnection(device: BluetoothDevice) {
         socket = device.createRfcommSocketToServiceRecord(UUID.fromString(Constants.APP_UUID))
@@ -32,19 +30,7 @@ class BluetoothClient(
             e.printStackTrace()
             throw e
         }
-        manageConnectedSocket(socket)
-    }
-
-    private fun manageConnectedSocket(socket: BluetoothSocket) {
-        connection = Connection(handler, socket, receiveCallback)
-        connection!!.start()
-    }
-
-    fun sendMsg(msg: String) {
-        if (connection == null)
-            throw RuntimeException("client: connection hasn't been established")
-
-        connection!!.write(msg.encodeToByteArray())
+        onGetSocket(socket)
     }
 
     fun cancel() {

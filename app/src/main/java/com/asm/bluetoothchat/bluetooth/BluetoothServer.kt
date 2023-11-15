@@ -12,11 +12,10 @@ import java.util.UUID
 
 @SuppressLint("MissingPermission")
 class BluetoothServer(
-    private val handler: Handler,
     bluetoothAdapter: BluetoothAdapter?,
     name: String,
     uuid: UUID,
-    private val receiveCallback: (size: Int, buffer: ByteArray) -> Unit
+    private val onGetSocket: (socket: BluetoothSocket) -> Unit
 ) : Thread() {
     private var serverSocket: BluetoothServerSocket
     init {
@@ -42,16 +41,11 @@ class BluetoothServer(
                 throw e
             }
             socket.also {
-                manageConnectedSocket(socket)
+                onGetSocket(socket)
                 shouldLoop = false
                 serverSocket.close()
             }
         }
-    }
-
-    private fun manageConnectedSocket(socket: BluetoothSocket) {
-        val connection = Connection(handler, socket, receiveCallback)
-        connection.start()
     }
 
     fun cancel() {
