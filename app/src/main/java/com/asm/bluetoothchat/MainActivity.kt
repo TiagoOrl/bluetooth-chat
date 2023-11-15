@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
+import com.asm.bluetoothchat.utils.HelperUI
 import java.nio.charset.Charset
 import java.text.MessageFormat
 
@@ -24,7 +25,7 @@ class MainActivity : AppCompatActivity() {
             size, buffer ->
                 val msg = String(buffer,0, size, Charset.defaultCharset())
                 binding.tvChatMain.text = MessageFormat.format(
-                    "{0} \n{1}",
+                    "{0} \nPeer: {1}",
                     binding.tvChatMain.text,
                     msg
                 )
@@ -80,8 +81,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSendMsg.setOnClickListener {
+            HelperUI.closeKeyboard(this)
             if (binding.etChat.text!!.isNotEmpty()) {
                 mainController.sendMessage(binding.etChat.text.toString())
+
+                binding.tvChatMain.text = MessageFormat.format(
+                    "{0} \nYou: {1}",
+                    binding.tvChatMain.text,
+                    binding.etChat.text.toString()
+                )
             }
         }
     }

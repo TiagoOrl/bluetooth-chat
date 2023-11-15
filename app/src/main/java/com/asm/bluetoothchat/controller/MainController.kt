@@ -21,6 +21,7 @@ import com.asm.bluetoothchat.utils.FragmentUtils
 import java.lang.RuntimeException
 import java.util.UUID
 
+@SuppressLint("MissingPermission")
 class MainController(
     private val activity: FragmentActivity,
     private val permissionsManager: PermissionsManager,
@@ -38,9 +39,10 @@ class MainController(
     var isBtActivated = false;
 
     init {
-        pairedDevicesFragment = PairedDevicesFragment(this) {
+        pairedDevicesFragment = PairedDevicesFragment(this) { device ->
             if (haveRequiredPermissions()) {
-                bluetoothClient.createClientConnection(it.bluetoothDevice)
+                bluetoothClient.createClientConnection(device.bluetoothDevice)
+                device.isConnected = true
                 bluetoothClient.start()
             } else
                 requestNeededPermissions()

@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.asm.bluetoothchat.R
-import com.asm.bluetoothchat.bluetooth.BluetoothClient
 import com.asm.bluetoothchat.bluetooth.Device
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.DevicesPairedFragmentBinding

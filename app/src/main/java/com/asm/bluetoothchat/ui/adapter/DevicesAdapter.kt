@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.asm.bluetoothchat.R
-import com.asm.bluetoothchat.bluetooth.BluetoothClient
 import com.asm.bluetoothchat.bluetooth.Device
 import com.asm.bluetoothchat.databinding.CardDeviceItemBinding
 
