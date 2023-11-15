@@ -47,14 +47,13 @@ class DevicesAdapter(
             binding.ibDeviceConnect
 
             if (device.isConnected)
-                binding.ibDeviceConnect.setBackgroundResource(R.drawable.baseline_check_box_24)
+                binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
             else
-                binding.ibDeviceConnect.setBackgroundResource(R.drawable.baseline_check_box_outline_blank_24)
+                binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_outline_blank_24)
 
             binding.ibDeviceConnect.setOnClickListener {
                 onConnect(device)
-                it.setBackgroundResource(R.drawable.baseline_check_box_24)
-                println("CLIEKED")
+                binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
             }
         }
     }
