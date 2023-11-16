@@ -11,7 +11,7 @@ import com.asm.bluetoothchat.databinding.CardDeviceItemBinding
 
 class DevicesAdapter(
     private val activity: FragmentActivity,
-    private val onConnect: (device: Device) -> Unit
+    private val onClickConnect: (device: Device) -> Unit
 ) : RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>() {
     private lateinit var devices: ArrayList<Device>
 
@@ -54,7 +54,7 @@ class DevicesAdapter(
 
             binding.ibDeviceConnect.setOnClickListener {
                 if (!device.isConnected) {
-                    onConnect(device)
+                    onClickConnect(device)
                     binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
                     activity.supportFragmentManager.popBackStackImmediate()
                 }
