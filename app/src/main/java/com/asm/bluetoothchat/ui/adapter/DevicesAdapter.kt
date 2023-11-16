@@ -3,12 +3,14 @@ package com.asm.bluetoothchat.ui.adapter
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.asm.bluetoothchat.R
 import com.asm.bluetoothchat.bluetooth.Device
 import com.asm.bluetoothchat.databinding.CardDeviceItemBinding
 
 class DevicesAdapter(
+    private val activity: FragmentActivity,
     private val onConnect: (device: Device) -> Unit
 ) : RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>() {
     private lateinit var devices: ArrayList<Device>
@@ -54,6 +56,7 @@ class DevicesAdapter(
                 if (!device.isConnected) {
                     onConnect(device)
                     binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
+                    activity.supportFragmentManager.popBackStackImmediate()
                 }
             }
         }

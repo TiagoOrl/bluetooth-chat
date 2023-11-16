@@ -105,6 +105,10 @@ class MainController(
         return devices
     }
 
+    /**
+     * Initializes the client and server bluetooth sides
+     * onGetSocket: callback used to start a Connection after Client or Server getting a Socket
+     */
     private fun initClientAndServer(onGetSocket: (socket: BluetoothSocket) -> Unit) {
         bluetoothClient = BluetoothClient(
             bluetoothAdapter,

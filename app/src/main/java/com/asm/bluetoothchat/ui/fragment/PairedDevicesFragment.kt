@@ -17,7 +17,9 @@ class PairedDevicesFragment(
     private val onConnect: (device: Device) -> Unit
 ) : Fragment(R.layout.devices_paired_fragment) {
     private lateinit var binding: DevicesPairedFragmentBinding
-    private val adapter by lazy { DevicesAdapter(onConnect) }
+    private val adapter by lazy {
+        DevicesAdapter(requireActivity(), onConnect)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
