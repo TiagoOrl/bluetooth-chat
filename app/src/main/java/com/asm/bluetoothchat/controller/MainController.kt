@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
 import androidx.fragment.app.FragmentActivity
 import com.asm.bluetoothchat.Constants
 import com.asm.bluetoothchat.bluetooth.BluetoothClient
@@ -25,7 +24,9 @@ import java.util.UUID
 class MainController(
     private val activity: FragmentActivity,
     private val permissionsManager: PermissionsManager,
-    private val onReceiveMsg: (size: Int, buffer: ByteArray) -> Unit
+    private val handler: Handler,
+    private val onReceiveMsg: (size: Int, buffer: ByteArray) -> Unit,
+    private val onGetConnection: (deviceName: String) -> Unit
 ) {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private val devices = arrayListOf<Device>()
@@ -75,13 +76,13 @@ class MainController(
         } else {
             isBtActivated = true
 
-            val onConnect = { socket: BluetoothSocket ->
-                connection = Connection(Handler(Looper.getMainLooper()), socket, onReceiveMsg)
+            val onGetSocket = { socket: BluetoothSocket ->
+                handler.post { onGetConnection(socket.remoteDevice.name) }
+                connection = Connection(handler, socket, onReceiveMsg)
                 connection!!.start()
             }
 
-            initBluetoothServer(onConnect)
-            initBluetoothClient(onConnect)
+            initClientAndServer(onGetSocket)
         }
     }
 
@@ -104,7 +105,12 @@ class MainController(
         return devices
     }
 
-    private fun initBluetoothServer(onGetSocket: (socket: BluetoothSocket) -> Unit) {
+    private fun initClientAndServer(onGetSocket: (socket: BluetoothSocket) -> Unit) {
+        bluetoothClient = BluetoothClient(
+            bluetoothAdapter,
+            onGetSocket
+        )
+
         bluetoothServer = BluetoothServer(
             bluetoothAdapter,
             Constants.APP_NAME,
@@ -112,13 +118,6 @@ class MainController(
             onGetSocket
         )
         bluetoothServer.start()
-    }
-
-    private fun initBluetoothClient(onGetSocket: (socket: BluetoothSocket) -> Unit) {
-        bluetoothClient = BluetoothClient(
-            bluetoothAdapter,
-            onGetSocket
-        )
     }
 
     /**
