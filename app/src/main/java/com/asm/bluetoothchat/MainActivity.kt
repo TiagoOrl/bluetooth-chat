@@ -3,6 +3,8 @@ package com.asm.bluetoothchat
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.ActivityMainBinding
@@ -21,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mainController = MainController(this, PermissionsManager()) {
+        mainController = MainController(this, PermissionsManager(), Handler(Looper.getMainLooper()), {
             size, buffer ->
                 val msg = String(buffer,0, size, Charset.defaultCharset())
                 binding.tvChatMain.text = MessageFormat.format(
@@ -29,7 +31,9 @@ class MainActivity : AppCompatActivity() {
                     binding.tvChatMain.text,
                     msg
                 )
-        }
+        }, {
+            binding.tvConnectionStatus.text = it
+        })
 
         initViews()
     }
