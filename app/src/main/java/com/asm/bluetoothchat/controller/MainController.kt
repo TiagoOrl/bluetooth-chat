@@ -66,32 +66,22 @@ class MainController(
         } else
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
-        checkBTEnabled()
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun checkBTEnabled() {
-        if (!haveRequiredPermissions()) {
-            requestNeededPermissions()
-            return
-        }
-
         if (bluetoothAdapter == null)
-            throw RuntimeException("bluetoothAdapter is null")
+            throw RuntimeException("bluetoothAdapter is not available.")
 
         if (!bluetoothAdapter!!.isEnabled) {
             val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             activity.startActivityForResult(intent, Constants.REQ_ENABLE_BLUETOOTH)
         } else {
             isBtActivated = true
-            initBluetoothServer {
-                connection = Connection(Handler(Looper.getMainLooper()), it, onReceiveMsg)
+
+            val onConnect = { socket: BluetoothSocket ->
+                connection = Connection(Handler(Looper.getMainLooper()), socket, onReceiveMsg)
                 connection!!.start()
             }
-            initBluetoothClient {
-                connection = Connection(Handler(Looper.getMainLooper()), it, onReceiveMsg)
-                connection!!.start()
-            }
+
+            initBluetoothServer(onConnect)
+            initBluetoothClient(onConnect)
         }
     }
 
