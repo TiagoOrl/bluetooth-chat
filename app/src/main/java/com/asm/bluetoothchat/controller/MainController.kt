@@ -77,12 +77,17 @@ class MainController(
             isBtActivated = true
 
             val onGetSocket = { socket: BluetoothSocket ->
+                devices.forEach {
+                    if (it.bluetoothDevice.address == socket.remoteDevice.address)
+                        it.isConnected = true
+                }
                 handler.post { onGetConnection(socket.remoteDevice.name) }
                 connection = Connection(handler, socket, onReceiveMsg)
                 connection!!.start()
             }
 
             initClientAndServer(onGetSocket)
+            getPairedDevices()
         }
     }
 
