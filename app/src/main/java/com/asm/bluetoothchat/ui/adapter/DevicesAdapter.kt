@@ -44,7 +44,6 @@ class DevicesAdapter(
         @SuppressLint("MissingPermission")
         fun bind(device: Device) {
             binding.tvDeviceName.text = device.bluetoothDevice.name
-            binding.tvDeviceMac.text = device.bluetoothDevice.address
             binding.ibDeviceConnect
 
             if (device.isConnected)
