@@ -13,7 +13,7 @@ class DevicesAdapter(
     private val activity: FragmentActivity,
     private val onClickConnect: (device: Device) -> Unit
 ) : RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>() {
-    private lateinit var devices: ArrayList<Device>
+    private var devices: ArrayList<Device> = arrayListOf()
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder {
