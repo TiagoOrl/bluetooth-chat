@@ -3,15 +3,17 @@ package com.asm.bluetoothchat.ui.adapter
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.asm.bluetoothchat.R
 import com.asm.bluetoothchat.bluetooth.Device
 import com.asm.bluetoothchat.databinding.CardDeviceItemBinding
 
 class DevicesAdapter(
-    private val onConnect: (device: Device) -> Unit
+    private val activity: FragmentActivity,
+    private val onClickConnect: (device: Device) -> Unit
 ) : RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>() {
-    private lateinit var devices: ArrayList<Device>
+    private var devices: ArrayList<Device> = arrayListOf()
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder {
@@ -42,7 +44,6 @@ class DevicesAdapter(
         @SuppressLint("MissingPermission")
         fun bind(device: Device) {
             binding.tvDeviceName.text = device.bluetoothDevice.name
-            binding.tvDeviceMac.text = device.bluetoothDevice.address
             binding.ibDeviceConnect
 
             if (device.isConnected)
@@ -52,8 +53,9 @@ class DevicesAdapter(
 
             binding.ibDeviceConnect.setOnClickListener {
                 if (!device.isConnected) {
-                    onConnect(device)
+                    onClickConnect(device)
                     binding.ibDeviceConnect.setImageResource(R.drawable.baseline_check_box_24)
+                    activity.supportFragmentManager.popBackStackImmediate()
                 }
             }
         }

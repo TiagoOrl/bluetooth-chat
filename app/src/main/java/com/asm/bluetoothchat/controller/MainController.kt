@@ -48,7 +48,7 @@ class MainController(
             } else
                 requestNeededPermissions()
         }
-        requestNeededPermissions()
+        initPermissions()
         initBluetooth()
     }
 
@@ -77,12 +77,17 @@ class MainController(
             isBtActivated = true
 
             val onGetSocket = { socket: BluetoothSocket ->
+                devices.forEach {
+                    if (it.bluetoothDevice.address == socket.remoteDevice.address)
+                        it.isConnected = true
+                }
                 handler.post { onGetConnection(socket.remoteDevice.name) }
                 connection = Connection(handler, socket, onReceiveMsg)
                 connection!!.start()
             }
 
             initClientAndServer(onGetSocket)
+            getPairedDevices()
         }
     }
 
@@ -105,6 +110,10 @@ class MainController(
         return devices
     }
 
+    /**
+     * Initializes the client and server bluetooth sides
+     * onGetSocket: callback used to start a Connection after Client or Server getting a Socket
+     */
     private fun initClientAndServer(onGetSocket: (socket: BluetoothSocket) -> Unit) {
         bluetoothClient = BluetoothClient(
             bluetoothAdapter,
@@ -124,36 +133,36 @@ class MainController(
      * checks if has granted locations and bluetooth connect permission, request if its not granted
      */
     private fun requestNeededPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            !permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_SCAN)
-            ) {
-            val permissions = arrayListOf<String>()
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
-            permissionsManager.requestPermission(
-                activity,
-                "Bluetooth request",
-                "Bluetooth permission SCAN needed",
-                Constants.REQ_BLUETOOTH_SCAN,
-                permissions.toTypedArray()
-            )
-        } else
-            hasScanPermission = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_SCAN)) {
+                val permissions = arrayListOf<String>()
+                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+                permissionsManager.requestPermission(
+                    activity,
+                    "Bluetooth request",
+                    "Bluetooth permission SCAN needed",
+                    Constants.REQ_BLUETOOTH_SCAN,
+                    permissions.toTypedArray()
+                )
+            } else
+                hasScanPermission = true
 
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            !permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_CONNECT)
-        ) {
-            val permissions = arrayListOf<String>()
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-            permissionsManager.requestPermission(
-                activity,
-                "Bluetooth request",
-                "Bluetooth permission request needed",
-                Constants.REQ_ALLOW_BLUETOOTH_CONNECT,
-                permissions.toTypedArray()
-            )
-        } else
-            hasConnectPermission = true;
+            if (!permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_CONNECT)) {
+                val permissions = arrayListOf<String>()
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+                permissionsManager.requestPermission(
+                    activity,
+                    "Bluetooth request",
+                    "Bluetooth permission request needed",
+                    Constants.REQ_ALLOW_BLUETOOTH_CONNECT,
+                    permissions.toTypedArray()
+                )
+            } else
+                hasConnectPermission = true
+        } else {
+            hasScanPermission = true
+            hasConnectPermission = true
+        }
 
         if (!permissionsManager.havePermissionFor(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
             val permissions = arrayListOf<String>()
@@ -185,4 +194,20 @@ class MainController(
        return (hasLocationPermission && hasConnectPermission && hasScanPermission)
     }
 
+    private fun initPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_SCAN))
+                hasScanPermission = true
+
+            if (permissionsManager.havePermissionFor(activity, Manifest.permission.BLUETOOTH_CONNECT))
+                hasConnectPermission = true
+
+        } else {
+            hasScanPermission = true
+            hasConnectPermission = true
+        }
+
+        if (permissionsManager.havePermissionFor(activity, Manifest.permission.ACCESS_FINE_LOCATION))
+            hasLocationPermission = true
+    }
 }

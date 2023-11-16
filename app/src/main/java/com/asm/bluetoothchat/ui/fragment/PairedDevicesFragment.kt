@@ -14,10 +14,12 @@ import com.asm.bluetoothchat.ui.adapter.DevicesAdapter
 
 class PairedDevicesFragment(
     private val mainController: MainController,
-    private val onConnect: (device: Device) -> Unit
+    private val onClickConnect: (device: Device) -> Unit
 ) : Fragment(R.layout.devices_paired_fragment) {
     private lateinit var binding: DevicesPairedFragmentBinding
-    private val adapter by lazy { DevicesAdapter(onConnect) }
+    private val adapter by lazy {
+        DevicesAdapter(requireActivity(), onClickConnect)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
