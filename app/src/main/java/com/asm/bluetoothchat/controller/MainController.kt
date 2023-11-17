@@ -14,10 +14,13 @@ import com.asm.bluetoothchat.bluetooth.BluetoothClient
 import com.asm.bluetoothchat.bluetooth.BluetoothServer
 import com.asm.bluetoothchat.bluetooth.Connection
 import com.asm.bluetoothchat.bluetooth.Device
+import com.asm.bluetoothchat.bluetooth.Message
 import com.asm.bluetoothchat.permission.PermissionsManager
+import com.asm.bluetoothchat.ui.adapter.ChatAdapter
 import com.asm.bluetoothchat.ui.fragment.PairedDevicesFragment
 import com.asm.bluetoothchat.utils.FragmentUtils
 import java.lang.RuntimeException
+import java.nio.charset.Charset
 import java.util.UUID
 
 @SuppressLint("MissingPermission")
@@ -25,11 +28,12 @@ class MainController(
     private val activity: FragmentActivity,
     private val permissionsManager: PermissionsManager,
     private val handler: Handler,
-    private val onReceiveMsg: (size: Int, buffer: ByteArray) -> Unit,
-    private val onGetConnection: (deviceName: String) -> Unit
+    private val onGetConnection: (deviceName: String) -> Unit,
+    private val onGetMsg: (position: Int) -> Unit
 ) {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private val devices = arrayListOf<Device>()
+    val messages = arrayListOf<Message>()
     private lateinit var bluetoothServer: BluetoothServer
     private lateinit var bluetoothClient: BluetoothClient
     private var connection: Connection? = null
@@ -38,6 +42,7 @@ class MainController(
     var hasLocationPermission = false;
     var hasScanPermission = false
     var isBtActivated = false;
+    val chatAdapter: ChatAdapter = ChatAdapter()
 
     init {
         pairedDevicesFragment = PairedDevicesFragment(this) { device ->
@@ -82,7 +87,14 @@ class MainController(
                         it.isConnected = true
                 }
                 handler.post { onGetConnection(socket.remoteDevice.name) }
-                connection = Connection(handler, socket, onReceiveMsg)
+                connection = Connection(handler, socket) {
+                    size, buffer ->
+                        val data = String(buffer,0, size, Charset.defaultCharset())
+                        val msg = Message(data, "", "incoming")
+                        messages.add(msg)
+                        chatAdapter.updateData(msg)
+                        onGetMsg(messages.size - 1)
+                }
                 connection!!.start()
             }
 
@@ -183,12 +195,16 @@ class MainController(
         FragmentUtils.show(activity.supportFragmentManager, pairedDevicesFragment)
     }
 
-    fun sendMessage(msg: String) {
+    fun sendMessage(data: String) {
+        val msg = Message(data, bluetoothAdapter!!.name, "outgoing")
+        messages.add(msg)
+        chatAdapter.updateData(msg)
         if (connection != null)
-            connection!!.write(msg.encodeToByteArray())
+            connection!!.write(data.encodeToByteArray())
         else
             println("MainController: could not send message, connection is null")
     }
+
 
     private fun haveRequiredPermissions() : Boolean {
        return (hasLocationPermission && hasConnectPermission && hasScanPermission)
