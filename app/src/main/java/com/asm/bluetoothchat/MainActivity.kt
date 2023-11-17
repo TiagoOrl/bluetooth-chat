@@ -6,9 +6,11 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
+import com.asm.bluetoothchat.ui.adapter.ChatAdapter
 import com.asm.bluetoothchat.utils.HelperUI
 import java.nio.charset.Charset
 import java.text.MessageFormat
@@ -23,17 +25,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mainController = MainController(this, PermissionsManager(), Handler(Looper.getMainLooper()), {
-            size, buffer ->
-                val msg = String(buffer,0, size, Charset.defaultCharset())
-                binding.tvChatMain.text = MessageFormat.format(
-                    "{0} \nPeer: {1}",
-                    binding.tvChatMain.text,
-                    msg
-                )
-        }, {
+        mainController = MainController(this, PermissionsManager(), Handler(Looper.getMainLooper())) {
             binding.tvConnectionStatus.text = it
-        })
+        }
 
         initViews()
     }
@@ -80,6 +74,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        binding.rvChat.adapter = mainController.chatAdapter
+        binding.rvChat.layoutManager = LinearLayoutManager(this)
+
         binding.btnGetPaired.setOnClickListener {
             mainController.showPairedDevices()
         }
@@ -88,12 +85,6 @@ class MainActivity : AppCompatActivity() {
             HelperUI.closeKeyboard(this)
             if (binding.etChat.text!!.isNotEmpty()) {
                 mainController.sendMessage(binding.etChat.text.toString())
-
-                binding.tvChatMain.text = MessageFormat.format(
-                    "{0} \nYou: {1}",
-                    binding.tvChatMain.text,
-                    binding.etChat.text.toString()
-                )
             }
         }
     }
