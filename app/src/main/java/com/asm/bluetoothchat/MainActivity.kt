@@ -10,10 +10,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.asm.bluetoothchat.controller.MainController
 import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
-import com.asm.bluetoothchat.ui.adapter.ChatAdapter
+
 import com.asm.bluetoothchat.utils.HelperUI
-import java.nio.charset.Charset
-import java.text.MessageFormat
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -25,9 +24,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        mainController = MainController(this, PermissionsManager(), Handler(Looper.getMainLooper())) {
+        mainController = MainController(this, PermissionsManager(), Handler(Looper.getMainLooper()), {
             binding.tvConnectionStatus.text = it
-        }
+        }, {
+            binding.rvChat.scrollToPosition(it)
+        })
 
         initViews()
     }
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
             HelperUI.closeKeyboard(this)
             if (binding.etChat.text!!.isNotEmpty()) {
                 mainController.sendMessage(binding.etChat.text.toString())
+                binding.rvChat.scrollToPosition(mainController.messages.size - 1)
             }
         }
     }

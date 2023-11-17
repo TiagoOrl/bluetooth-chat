@@ -28,11 +28,12 @@ class MainController(
     private val activity: FragmentActivity,
     private val permissionsManager: PermissionsManager,
     private val handler: Handler,
-    private val onGetConnection: (deviceName: String) -> Unit
+    private val onGetConnection: (deviceName: String) -> Unit,
+    private val onGetMsg: (position: Int) -> Unit
 ) {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private val devices = arrayListOf<Device>()
-    private val messages = arrayListOf<Message>()
+    val messages = arrayListOf<Message>()
     private lateinit var bluetoothServer: BluetoothServer
     private lateinit var bluetoothClient: BluetoothClient
     private var connection: Connection? = null
@@ -88,8 +89,11 @@ class MainController(
                 handler.post { onGetConnection(socket.remoteDevice.name) }
                 connection = Connection(handler, socket) {
                     size, buffer ->
-                        val msg = String(buffer,0, size, Charset.defaultCharset())
-                        chatAdapter.updateData(Message(msg, "", "incoming"))
+                        val data = String(buffer,0, size, Charset.defaultCharset())
+                        val msg = Message(data, "", "incoming")
+                        messages.add(msg)
+                        chatAdapter.updateData(msg)
+                        onGetMsg(messages.size - 1)
                 }
                 connection!!.start()
             }
@@ -191,10 +195,12 @@ class MainController(
         FragmentUtils.show(activity.supportFragmentManager, pairedDevicesFragment)
     }
 
-    fun sendMessage(msg: String) {
-        chatAdapter.updateData(Message(msg, bluetoothAdapter!!.name, "outgoing"))
+    fun sendMessage(data: String) {
+        val msg = Message(data, bluetoothAdapter!!.name, "outgoing")
+        messages.add(msg)
+        chatAdapter.updateData(msg)
         if (connection != null)
-            connection!!.write(msg.encodeToByteArray())
+            connection!!.write(data.encodeToByteArray())
         else
             println("MainController: could not send message, connection is null")
     }
