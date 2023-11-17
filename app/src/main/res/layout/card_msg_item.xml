@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardCornerRadius="2dp"
-    android:layout_margin="4dp"
     app:strokeWidth="0dp"
     >
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -17,7 +16,7 @@
         <TextView
             android:id="@+id/tv_chat_msg"
             android:background="@drawable/bg_chat"
-            android:layout_margin="3dp"
+            android:layout_margin="1dp"
             android:padding="3dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
