@@ -2,6 +2,7 @@ package com.asm.bluetoothchat
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,6 +13,7 @@ import com.asm.bluetoothchat.databinding.ActivityMainBinding
 import com.asm.bluetoothchat.permission.PermissionsManager
 
 import com.asm.bluetoothchat.utils.HelperUI
+import java.text.MessageFormat
 
 
 class MainActivity : AppCompatActivity() {
@@ -25,7 +27,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         mainController = MainController(this, PermissionsManager(), Handler(Looper.getMainLooper()), {
-            binding.tvConnectionStatus.text = it
+            binding.tvConnectionStatus.setTextColor(Color.parseColor("#1A95F1"))
+            binding.tvConnectionStatus.text = MessageFormat.format("Connected: {0}", it)
         }, {
             binding.rvChat.scrollToPosition(it)
         })
