@@ -77,6 +77,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        mainController.closeConnections()
+    }
+
     private fun initViews() {
         binding.rvChat.adapter = mainController.chatAdapter
         binding.rvChat.layoutManager = LinearLayoutManager(this)

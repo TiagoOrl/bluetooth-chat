@@ -28,7 +28,7 @@ class MainController(
     private val activity: FragmentActivity,
     private val permissionsManager: PermissionsManager,
     private val handler: Handler,
-    private val onGetConnection: (deviceName: String) -> Unit,
+    private val onConnEstablished: (deviceName: String) -> Unit,
     private val onGetMsg: (position: Int) -> Unit
 ) {
     private var bluetoothAdapter: BluetoothAdapter? = null
@@ -44,10 +44,57 @@ class MainController(
     var isBtActivated = false;
     val chatAdapter: ChatAdapter = ChatAdapter()
 
+    private val onConnLost = { msg: String, name: String, address: String ->
+        println("ConnLost for $name: $msg")
+        connection!!.close()
+
+        devices.forEach {
+            if (it.bluetoothDevice.address == address)
+                it.isConnected = false
+        }
+        onConnEstablished("None")
+    }
+
+    private val onGetSocket = { socket: BluetoothSocket? ->
+        if (socket != null) {
+            devices.forEach {
+                if (it.bluetoothDevice.address == socket.remoteDevice.address)
+                    it.isConnected = true
+            }
+            handler.post { onConnEstablished(socket.remoteDevice.name) }
+            connection = Connection(handler, socket, { size, buffer ->
+                val data = String(buffer,0, size, Charset.defaultCharset())
+                val msg = Message(data, "", "incoming")
+                messages.add(msg)
+                chatAdapter.updateData(msg)
+                onGetMsg(messages.size - 1)
+            },
+                onConnLost
+            )
+            connection!!.start()
+        } else
+            println("socket received is null, cant establish connection")
+    }
+
+    private val onServerSocketError = { msg: String ->
+        println("server socket lost error: $msg")
+        bluetoothServer.close()
+    }
+
+    private val onClientConnError = { msg: String ->
+        println("Client Connect Error: $msg")
+    }
+
     init {
         pairedDevicesFragment = PairedDevicesFragment(this) { device ->
             if (haveRequiredPermissions()) {
-                bluetoothClient.createClientConnection(device.bluetoothDevice)
+                bluetoothClient = BluetoothClient(
+                    bluetoothAdapter,
+                    device.bluetoothDevice,
+                    onGetSocket,
+                    onClientConnError
+                )
+
                 device.isConnected = true
                 bluetoothClient.start()
             } else
@@ -81,24 +128,7 @@ class MainController(
         } else {
             isBtActivated = true
 
-            val onGetSocket = { socket: BluetoothSocket ->
-                devices.forEach {
-                    if (it.bluetoothDevice.address == socket.remoteDevice.address)
-                        it.isConnected = true
-                }
-                handler.post { onGetConnection(socket.remoteDevice.name) }
-                connection = Connection(handler, socket) {
-                    size, buffer ->
-                        val data = String(buffer,0, size, Charset.defaultCharset())
-                        val msg = Message(data, "", "incoming")
-                        messages.add(msg)
-                        chatAdapter.updateData(msg)
-                        onGetMsg(messages.size - 1)
-                }
-                connection!!.start()
-            }
-
-            initClientAndServer(onGetSocket)
+            startServer()
             getPairedDevices()
         }
     }
@@ -122,21 +152,13 @@ class MainController(
         return devices
     }
 
-    /**
-     * Initializes the client and server bluetooth sides
-     * onGetSocket: callback used to start a Connection after Client or Server getting a Socket
-     */
-    private fun initClientAndServer(onGetSocket: (socket: BluetoothSocket) -> Unit) {
-        bluetoothClient = BluetoothClient(
-            bluetoothAdapter,
-            onGetSocket
-        )
-
+    private fun startServer() {
         bluetoothServer = BluetoothServer(
             bluetoothAdapter,
             Constants.APP_NAME,
             UUID.fromString(Constants.APP_UUID),
-            onGetSocket
+            onGetSocket,
+            onServerSocketError
         )
         bluetoothServer.start()
     }
@@ -225,5 +247,17 @@ class MainController(
 
         if (permissionsManager.havePermissionFor(activity, Manifest.permission.ACCESS_FINE_LOCATION))
             hasLocationPermission = true
+    }
+
+    fun closeConnections() {
+        println("closed connections")
+
+        if (connection != null) {
+            connection!!.close()
+            connection!!.join()
+        }
+
+        bluetoothServer.close()
+        bluetoothServer.join()
     }
 }

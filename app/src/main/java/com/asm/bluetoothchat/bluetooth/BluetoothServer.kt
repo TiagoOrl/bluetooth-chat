@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
-import android.os.Handler
-import android.os.Looper
 import java.io.IOException
 import java.lang.RuntimeException
 import java.util.UUID
@@ -15,7 +13,8 @@ class BluetoothServer(
     bluetoothAdapter: BluetoothAdapter?,
     name: String,
     uuid: UUID,
-    private val onGetSocket: (socket: BluetoothSocket) -> Unit
+    private val onGetSocket: (socket: BluetoothSocket) -> Unit,
+    private val onServerSocketError: (err: String) -> Unit
 ) : Thread() {
     private var serverSocket: BluetoothServerSocket
     init {
@@ -38,7 +37,8 @@ class BluetoothServer(
                 socket = serverSocket.accept()
             } catch (e: IOException) {
                 e.printStackTrace()
-                throw e
+                onServerSocketError(e.toString())
+                break
             }
             socket.also {
                 onGetSocket(socket)
@@ -48,13 +48,13 @@ class BluetoothServer(
         }
     }
 
-    fun cancel() {
+
+    fun close() {
         try {
             serverSocket.close()
         } catch (e: IOException) {
             e.printStackTrace()
             throw e
         }
-        join()
     }
 }
